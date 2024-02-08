@@ -261,6 +261,9 @@ func (ch *ClientHello) Unmarshal(payload []byte) error {
 			for len(data) > 0 {
 				stringLen := int(data[0])
 				data = data[1:]
+				if len(data) < stringLen {
+					return ErrHandshakeExtBadLength
+				}
 				ch.ALPNs = append(ch.ALPNs, string(data[:stringLen]))
 				data = data[stringLen:]
 			}
