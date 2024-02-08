@@ -187,6 +187,9 @@ func (ch *ClientHello) Unmarshal(payload []byte) error {
 				default:
 					// Unknown Name Type
 				}
+				if len(data) < nameLen {
+					return ErrHandshakeExtBadLength
+				}
 				data = data[nameLen:]
 			}
 		case ExtSignatureAlgs:
