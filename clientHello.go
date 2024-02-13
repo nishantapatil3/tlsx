@@ -99,7 +99,7 @@ func (ch *ClientHello) Unmarshal(payload []byte) error {
 	ch.CipherSuiteLen = uint16(hs[0])<<8 | uint16(hs[1])
 
 	numCiphers := ch.CipherSuiteLen / 2
-	if len(hs) < int(ch.CipherSuiteLen) {
+	if len(hs) < int(ch.CipherSuiteLen) + 3 {
 		return ErrHandshakeBadLength
 	}
 
