@@ -99,7 +99,7 @@ func (ch *ClientHello) Unmarshal(payload []byte) error {
 	ch.CipherSuiteLen = uint16(hs[0])<<8 | uint16(hs[1])
 
 	numCiphers := ch.CipherSuiteLen / 2
-	if len(hs) < int(ch.CipherSuiteLen) {
+	if len(hs) < int(ch.CipherSuiteLen) + 3 {
 		return ErrHandshakeBadLength
 	}
 
@@ -187,6 +187,9 @@ func (ch *ClientHello) Unmarshal(payload []byte) error {
 				default:
 					// Unknown Name Type
 				}
+				if len(data) < nameLen {
+					return ErrHandshakeExtBadLength
+				}
 				data = data[nameLen:]
 			}
 		case ExtSignatureAlgs:
@@ -261,6 +264,9 @@ func (ch *ClientHello) Unmarshal(payload []byte) error {
 			for len(data) > 0 {
 				stringLen := int(data[0])
 				data = data[1:]
+				if len(data) < stringLen {
+					return ErrHandshakeExtBadLength
+				}
 				ch.ALPNs = append(ch.ALPNs, string(data[:stringLen]))
 				data = data[stringLen:]
 			}
