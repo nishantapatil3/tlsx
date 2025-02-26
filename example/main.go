@@ -11,7 +11,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
-	"github.com/dreadl0ck/tlsx"
+	"github.com/nishantapatil3/tlsx"
 )
 
 func main() {
