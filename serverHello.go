@@ -15,9 +15,9 @@ const (
 type CurveID uint16
 
 // TLS 1.3 Key Share. See RFC 8446, Section 4.2.8.
-type keyShare struct {
-	group CurveID
-	data  []byte
+type KeyShare struct {
+	Group CurveID
+	Data  []byte
 }
 
 // readUint8LengthPrefixed acts like s.ReadUint8LengthPrefixed, but targets a
@@ -67,12 +67,12 @@ type ServerHello struct {
 	Ems                          bool
 	Scts                         [][]byte
 	SupportedVersion             uint16
-	ServerShare                  keyShare
+	ServerShare                  KeyShare
 	SelectedIdentityPresent      bool
 	SelectedIdentity             uint16
 
 	// HelloRetryRequest extensions
-	Cookie        []byte
+	Cookie []byte
 }
 
 func (m *ServerHello) Unmarshal(data []byte) error {
@@ -189,8 +189,8 @@ func (m *ServerHello) Unmarshal(data []byte) error {
 					return errors.New("failed to read extensionKeyShare")
 				}
 			} else {
-				if !extData.ReadUint16((*uint16)(&m.ServerShare.group)) ||
-					!readUint16LengthPrefixed(&extData, &m.ServerShare.data) {
+				if !extData.ReadUint16((*uint16)(&m.ServerShare.Group)) ||
+					!readUint16LengthPrefixed(&extData, &m.ServerShare.Data) {
 					return errors.New("failed to read extensionKeyShare")
 				}
 			}
@@ -240,13 +240,13 @@ func (ch ServerHello) String() string {
 }
 
 type ServerHelloBasic struct {
-	Vers                         uint16
-	Random                       []byte
-	SessionID                    []byte
-	CipherSuite                  uint16
-	CompressionMethod            uint8
-	SelectedGroup                CurveID
-	Extensions                   []uint16
+	Vers              uint16
+	Random            []byte
+	SessionID         []byte
+	CipherSuite       uint16
+	CompressionMethod uint8
+	SelectedGroup     CurveID
+	Extensions        []uint16
 }
 
 // Unmarshal only parses the fields needed for JA3 fingerprinting

@@ -11,14 +11,14 @@ const (
 type ClientHello struct {
 	TLSMessage
 	ClientHelloBasic
-
-	Random           []byte
-	SessionID        []byte
-	CompressMethods  []uint8
-	Extensions       map[Extension]uint16 // [Type]Length
-	SignatureAlgs    []uint16
-	OSCP             bool
-	ALPNs            []string
+	Random          []byte
+	SessionID       []byte
+	CompressMethods []uint8
+	Extensions      map[Extension]uint16 // [Type]Length
+	SignatureAlgs   []uint16
+	OSCP            bool
+	ALPNs           []string
+	keyShare        []uint16
 }
 
 func (ch ClientHello) String() string {
@@ -99,7 +99,7 @@ func (ch *ClientHello) Unmarshal(payload []byte) error {
 	ch.CipherSuiteLen = uint16(hs[0])<<8 | uint16(hs[1])
 
 	numCiphers := ch.CipherSuiteLen / 2
-	if len(hs) < int(ch.CipherSuiteLen) + 3 {
+	if len(hs) < int(ch.CipherSuiteLen)+3 {
 		return ErrHandshakeBadLength
 	}
 
