@@ -11,14 +11,15 @@ const (
 type ClientHello struct {
 	TLSMessage
 	ClientHelloBasic
-	Random          []byte
-	SessionID       []byte
-	CompressMethods []uint8
-	Extensions      map[Extension]uint16 // [Type]Length
-	SignatureAlgs   []uint16
-	OSCP            bool
-	ALPNs           []string
-	keyShare        []uint16
+	Random            []byte
+	SessionID         []byte
+	CompressMethods   []uint8
+	Extensions        map[Extension]uint16 // [Type]Length
+	SignatureAlgs     []uint16
+	OSCP              bool
+	ALPNs             []string
+	SupportedVersions []uint16
+	keyShare          []uint16
 }
 
 func (ch ClientHello) String() string {
@@ -133,9 +134,9 @@ func (ch *ClientHello) Unmarshal(payload []byte) error {
 	// Extensions
 	ch.ExtensionLen = uint16(hs[0])<<8 | uint16(hs[1])
 
-	if len(hs) < int(ch.ExtensionLen) {
-		return ErrHandshakeExtBadLength
-	}
+	//if len(hs) < int(ch.ExtensionLen) {
+	//	return ErrHandshakeExtBadLength
+	//}
 
 	hs = hs[2:]
 	ch.Extensions = make(map[Extension]uint16)
@@ -269,6 +270,50 @@ func (ch *ClientHello) Unmarshal(payload []byte) error {
 				}
 				ch.ALPNs = append(ch.ALPNs, string(data[:stringLen]))
 				data = data[stringLen:]
+			}
+		case ExtSupportedVersions:
+			if len(data) < 2 {
+				return ErrHandshakeBadLength
+			}
+			versionLen := int(data[0])
+
+			data = data[1:]
+			if len(data) < versionLen {
+				return ErrHandshakeBadLength
+			}
+
+			ch.SupportedVersions = make([]uint16, versionLen/2)
+
+			for i := 0; i < versionLen/2; i++ {
+				ch.SupportedVersions[i] = uint16(data[i*2])<<8 | uint16(data[i*2+1])
+			}
+		case ExtKeyShare:
+			if len(data) < 2 {
+				return ErrHandshakeBadLength
+			}
+			keyShareLen := int(data[0])<<8 | int(data[1])
+
+			data = data[2:]
+			if len(data) < keyShareLen {
+				return ErrHandshakeBadLength
+			}
+
+			ch.keyShare = make([]uint16, 0)
+			for len(data) > 0 {
+				if len(data) < 4 {
+					return ErrHandshakeExtBadLength
+				}
+
+				group := uint16(data[0])<<8 | uint16(data[1])
+				keyExchangeLen := int(data[2])<<8 | int(data[3])
+				data = data[4:]
+				if len(data) < keyExchangeLen {
+					return ErrHandshakeExtBadLength
+				}
+				data = data[keyExchangeLen:]
+
+				// Process the key share entry (group and key exchange)
+				ch.keyShare = append(ch.keyShare, group)
 			}
 		default:
 			// Other extension where we only care about presence, or presence
