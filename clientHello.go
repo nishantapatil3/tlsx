@@ -8,6 +8,21 @@ const (
 	ClientHelloRandomLen = 32
 )
 
+type ClientHelloBasic struct {
+	TLSMessage
+	HandshakeType    uint8
+	HandshakeLen     uint32
+	HandshakeVersion Version
+	SessionIDLen     uint32
+	CipherSuiteLen   uint16
+	CipherSuites     []CipherSuite
+	ExtensionLen     uint16
+	SNI              string
+	SupportedGroups  []uint16
+	SupportedPoints  []uint8
+	AllExtensions    []uint16
+}
+
 type ClientHello struct {
 	TLSMessage
 	ClientHelloBasic
@@ -36,6 +51,17 @@ func (ch ClientHello) String() string {
 	str += fmt.Sprintf("Points: %#v\n", ch.SupportedPoints)
 	str += fmt.Sprintf("OSCP: %v\n", ch.OSCP)
 	str += fmt.Sprintf("ALPNs: %v", ch.ALPNs)
+	return str
+}
+
+func (ch ClientHelloBasic) String() string {
+	str := fmt.Sprintln("Version:", ch.Version)
+	str += fmt.Sprintln("Handshake Type:", ch.HandshakeType)
+	str += fmt.Sprintln("Handshake Version:", ch.HandshakeVersion)
+	str += fmt.Sprintf("Cipher Suites (%d): %v\n", ch.CipherSuiteLen, ch.CipherSuites)
+	str += fmt.Sprintf("SNI: %q\n", ch.SNI)
+	str += fmt.Sprintf("Groups: %#v\n", ch.SupportedGroups)
+	str += fmt.Sprintf("Points: %#v\n", ch.SupportedPoints)
 	return str
 }
 
@@ -326,33 +352,7 @@ func (ch *ClientHello) Unmarshal(payload []byte) error {
 	return nil
 }
 
-type ClientHelloBasic struct {
-	TLSMessage
-	HandshakeType    uint8
-	HandshakeLen     uint32
-	HandshakeVersion Version
-	SessionIDLen     uint32
-	CipherSuiteLen   uint16
-	CipherSuites     []CipherSuite
-	ExtensionLen     uint16
-	SNI              string
-	SupportedGroups  []uint16
-	SupportedPoints  []uint8
-	AllExtensions    []uint16
-}
-
-func (ch ClientHelloBasic) String() string {
-	str := fmt.Sprintln("Version:", ch.Version)
-	str += fmt.Sprintln("Handshake Type:", ch.HandshakeType)
-	str += fmt.Sprintln("Handshake Version:", ch.HandshakeVersion)
-	str += fmt.Sprintf("Cipher Suites (%d): %v\n", ch.CipherSuiteLen, ch.CipherSuites)
-	str += fmt.Sprintf("SNI: %q\n", ch.SNI)
-	str += fmt.Sprintf("Groups: %#v\n", ch.SupportedGroups)
-	str += fmt.Sprintf("Points: %#v\n", ch.SupportedPoints)
-	return str
-}
-
-// UnmarshalBasic only parses the fields needed for JA3 fingerprinting
+// Unmarshal Basic only parses the fields needed for JA3 fingerprinting
 // to avoids unnecessary allocations
 func (ch *ClientHelloBasic) Unmarshal(payload []byte) error {
 

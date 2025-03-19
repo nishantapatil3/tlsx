@@ -54,6 +54,16 @@ const (
 	extensionRenegotiationInfo       uint16 = 0xff01
 )
 
+type ServerHelloBasic struct {
+	Vers              uint16
+	Random            []byte
+	SessionID         []byte
+	CipherSuite       uint16
+	CompressionMethod uint8
+	SelectedGroup     CurveID
+	Extensions        []uint16
+}
+
 type ServerHello struct {
 	ServerHelloBasic
 
@@ -73,6 +83,45 @@ type ServerHello struct {
 
 	// HelloRetryRequest extensions
 	Cookie []byte
+}
+
+func (ch ServerHelloBasic) String() string {
+	str := fmt.Sprintln("Version:", ch.Vers)
+	str += fmt.Sprintln("Random:", ch.Random)
+	str += fmt.Sprintf("SessionId: %#v\n", ch.SessionID)
+	str += fmt.Sprintf("CipherSuite (%d): %v\n", 1, ch.CipherSuite)
+	str += fmt.Sprintf("CompressionMethod: %v\n", ch.CompressionMethod)
+	str += fmt.Sprintf("Extensions: %v\n", ch.Extensions)
+	str += fmt.Sprintf("SelectedGroup: %v\n", ch.SelectedGroup)
+
+	return str
+}
+
+func (ch ServerHello) String() string {
+
+	str := fmt.Sprintln("Version:", ch.Vers)
+	str += fmt.Sprintln("Random:", ch.Random)
+	str += fmt.Sprintf("SessionId: %#v\n", ch.SessionID)
+	str += fmt.Sprintf("CipherSuite (%d): %v\n", 1, ch.CipherSuite)
+	str += fmt.Sprintf("CompressionMethod: %v\n", ch.CompressionMethod)
+	str += fmt.Sprintln("NextProtoNeg:", ch.NextProtoNeg)
+	str += fmt.Sprintf("NextProtos: %q\n", ch.NextProtos)
+	str += fmt.Sprintf("OcspStapling: %#v\n", ch.OCSPStapling)
+	str += fmt.Sprintf("Scts: %#v\n", ch.Scts)
+	str += fmt.Sprintf("Ems: %#v\n", ch.Ems)
+	str += fmt.Sprintf("TicketSupported: %v\n", ch.TicketSupported)
+	str += fmt.Sprintf("SecureRenegotiation: %v\n", ch.SecureRenegotiation)
+	str += fmt.Sprintf("SecureRenegotiationSupported: %v\n", ch.SecureRenegotiationSupported)
+	str += fmt.Sprintf("AlpnProtocol: %v\n", ch.AlpnProtocol)
+	str += fmt.Sprintf("Extensions: %v\n", ch.Extensions)
+	str += fmt.Sprintf("SupportedVersion: %v\n", ch.SupportedVersion)
+	str += fmt.Sprintf("ServerShare: %v\n", ch.ServerShare)
+	str += fmt.Sprintf("SelectedIdentityPresent: %v\n", ch.SelectedIdentityPresent)
+	str += fmt.Sprintf("SelectedIdentity: %v\n", ch.SelectedIdentity)
+	str += fmt.Sprintf("Cookie: %v\n", ch.Cookie)
+	str += fmt.Sprintf("SelectedGroup: %v\n", ch.SelectedGroup)
+
+	return str
 }
 
 func (m *ServerHello) Unmarshal(data []byte) error {
@@ -212,43 +261,6 @@ func (m *ServerHello) Unmarshal(data []byte) error {
 	return nil
 }
 
-func (ch ServerHello) String() string {
-
-	str := fmt.Sprintln("Version:", ch.Vers)
-	str += fmt.Sprintln("Random:", ch.Random)
-	str += fmt.Sprintf("SessionId: %#v\n", ch.SessionID)
-	str += fmt.Sprintf("CipherSuite (%d): %v\n", 1, ch.CipherSuite)
-	str += fmt.Sprintf("CompressionMethod: %v\n", ch.CompressionMethod)
-	str += fmt.Sprintln("NextProtoNeg:", ch.NextProtoNeg)
-	str += fmt.Sprintf("NextProtos: %q\n", ch.NextProtos)
-	str += fmt.Sprintf("OcspStapling: %#v\n", ch.OCSPStapling)
-	str += fmt.Sprintf("Scts: %#v\n", ch.Scts)
-	str += fmt.Sprintf("Ems: %#v\n", ch.Ems)
-	str += fmt.Sprintf("TicketSupported: %v\n", ch.TicketSupported)
-	str += fmt.Sprintf("SecureRenegotiation: %v\n", ch.SecureRenegotiation)
-	str += fmt.Sprintf("SecureRenegotiationSupported: %v\n", ch.SecureRenegotiationSupported)
-	str += fmt.Sprintf("AlpnProtocol: %v\n", ch.AlpnProtocol)
-	str += fmt.Sprintf("Extensions: %v\n", ch.Extensions)
-	str += fmt.Sprintf("SupportedVersion: %v\n", ch.SupportedVersion)
-	str += fmt.Sprintf("ServerShare: %v\n", ch.ServerShare)
-	str += fmt.Sprintf("SelectedIdentityPresent: %v\n", ch.SelectedIdentityPresent)
-	str += fmt.Sprintf("SelectedIdentity: %v\n", ch.SelectedIdentity)
-	str += fmt.Sprintf("Cookie: %v\n", ch.Cookie)
-	str += fmt.Sprintf("SelectedGroup: %v\n", ch.SelectedGroup)
-
-	return str
-}
-
-type ServerHelloBasic struct {
-	Vers              uint16
-	Random            []byte
-	SessionID         []byte
-	CipherSuite       uint16
-	CompressionMethod uint8
-	SelectedGroup     CurveID
-	Extensions        []uint16
-}
-
 // Unmarshal only parses the fields needed for JA3 fingerprinting
 // to avoids unnecessary allocations
 func (m *ServerHelloBasic) Unmarshal(data []byte) error {
@@ -305,17 +317,4 @@ func (m *ServerHelloBasic) Unmarshal(data []byte) error {
 	}
 
 	return nil
-}
-
-func (ch ServerHelloBasic) String() string {
-
-	str := fmt.Sprintln("Version:", ch.Vers)
-	str += fmt.Sprintln("Random:", ch.Random)
-	str += fmt.Sprintf("SessionId: %#v\n", ch.SessionID)
-	str += fmt.Sprintf("CipherSuite (%d): %v\n", 1, ch.CipherSuite)
-	str += fmt.Sprintf("CompressionMethod: %v\n", ch.CompressionMethod)
-	str += fmt.Sprintf("Extensions: %v\n", ch.Extensions)
-	str += fmt.Sprintf("SelectedGroup: %v\n", ch.SelectedGroup)
-
-	return str
 }
