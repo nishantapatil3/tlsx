@@ -48,6 +48,7 @@ func (ch ClientHello) String() string {
 	str += fmt.Sprintf("SNI: %q\n", ch.SNI)
 	str += fmt.Sprintf("Signature Algorithms: %#v\n", ch.SignatureAlgs)
 	str += fmt.Sprintf("Groups: %#v\n", ch.SupportedGroups)
+	str += fmt.Sprintf("Key Share %#v\n", ch.keyShare)
 	str += fmt.Sprintf("Points: %#v\n", ch.SupportedPoints)
 	str += fmt.Sprintf("OSCP: %v\n", ch.OSCP)
 	str += fmt.Sprintf("ALPNs: %v", ch.ALPNs)

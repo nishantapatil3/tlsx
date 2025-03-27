@@ -3,6 +3,7 @@ package tlsx
 import (
 	"errors"
 	"fmt"
+
 	"golang.org/x/crypto/cryptobyte"
 )
 
@@ -62,6 +63,7 @@ type ServerHelloBasic struct {
 	CompressionMethod uint8
 	SelectedGroup     CurveID
 	Extensions        []uint16
+	ExtensionLen      []byte
 }
 
 type ServerHello struct {
@@ -115,10 +117,10 @@ func (ch ServerHello) String() string {
 	str += fmt.Sprintf("AlpnProtocol: %v\n", ch.AlpnProtocol)
 	str += fmt.Sprintf("Extensions: %v\n", ch.Extensions)
 	str += fmt.Sprintf("SupportedVersion: %v\n", ch.SupportedVersion)
-	str += fmt.Sprintf("ServerShare: %v\n", ch.ServerShare)
 	str += fmt.Sprintf("SelectedIdentityPresent: %v\n", ch.SelectedIdentityPresent)
 	str += fmt.Sprintf("SelectedIdentity: %v\n", ch.SelectedIdentity)
 	str += fmt.Sprintf("Cookie: %v\n", ch.Cookie)
+	str += fmt.Sprintf("ServerShare group: %v\n", ch.ServerShare.Group)
 	str += fmt.Sprintf("SelectedGroup: %v\n", ch.SelectedGroup)
 
 	return str
@@ -127,7 +129,7 @@ func (ch ServerHello) String() string {
 func (m *ServerHello) Unmarshal(data []byte) error {
 
 	if len(data) < 5+4 {
-		return errors.New("Server returned short message")
+		return errors.New("server returned short message")
 	}
 
 	// buf contains a TLS record, with a 5 byte record header and a 4 byte
@@ -135,13 +137,17 @@ func (m *ServerHello) Unmarshal(data []byte) error {
 	// handshake header.
 	serverHelloLen := int(data[6])<<16 | int(data[7])<<8 | int(data[8])
 
-	if serverHelloLen >= len(data) {
-		return errors.New("invalid serverHelloLen")
-	}
+	//if serverHelloLen >= len(data) {
+	//	return errors.New("invalid serverHelloLen")
+	//}
 
 	// prevent slice bounds out of range [:19] with capacity 11
-	if len(data) < 9+serverHelloLen {
-		return errors.New("invalid data length for server hello")
+	// if len(data) < 9+serverHelloLen {
+	// 	return errors.New("invalid data length for server hello")
+	// }
+	if serverHelloLen > 1248 {
+		// 1248 is the max length of a server hello
+		serverHelloLen = 1248 - 9
 	}
 
 	data = data[5 : 9+serverHelloLen]
@@ -163,16 +169,33 @@ func (m *ServerHello) Unmarshal(data []byte) error {
 	}
 
 	var extensions cryptobyte.String
-	if !s.ReadUint16LengthPrefixed(&extensions) || !s.Empty() {
-		return errors.New("failed to read extensions")
+	if !s.ReadUint16LengthPrefixed(&extensions) {
+		// return errors.New("failed to read extensions")
+	}
+	if extensions.Empty() {
+		// manually set extension length to max value
+		extensions = s[0:]
 	}
 
 	for !extensions.Empty() {
 		var extension uint16
 		var extData cryptobyte.String
-		if !extensions.ReadUint16(&extension) ||
-			!extensions.ReadUint16LengthPrefixed(&extData) {
-			return errors.New("failed to read extension data")
+
+		// extension = uint16(extensions[0])<<8 | uint16(extensions[1])
+		// length := uint16(extensions[2])<<8 | uint16(extensions[3])
+		// fmt.Printf("checking server extType: %v : %x \n", extension, length)
+		// fmt.Printf("checking extData: %v : %x \n", extension, extData)
+
+		if !extensions.ReadUint16(&extension) {
+			return errors.New("failed to read extension")
+		}
+
+		// extData = extensions[4:]
+		if !extensions.ReadUint16LengthPrefixed(&extData) {
+			// return errors.New("failed to read extension data")
+		}
+		if extData.Empty() {
+			extData = extensions[0:]
 		}
 
 		m.Extensions = append(m.Extensions, extension)
